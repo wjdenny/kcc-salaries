@@ -1,0 +1,14 @@
+---
+title: "Faculty Salaries at Kirkwood Community College"
+author: 
+  - name: "Will Denny"
+    email: "will@wjdenny.com"
+license: "CC BY"
+execute:
+  echo: false
+---
+
+The data for this visualization project is obtained from [The Gazette](https://www.thegazette.com/salaries/data-kirkwood-community-college-public-employee-salaries-for-fiscal-year-2023/) from salary data of public employees of the state of Iowa.
+
+
+

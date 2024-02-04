@@ -1,0 +1,109 @@
+---
+title: "Professor Salaries"
+author: 
+  - name: "Will Denny"
+    email: "will@wjdenny.com"
+license: "CC BY"
+execute:
+  echo: false
+---
+
+```{r}
+#| label: dependencies
+#| output: false
+
+packages <- c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr")
+required_packages <- packages[!packages %in% installed.packages()[, "Package"]]
+
+if (length(required_packages)) {
+  install.packages(required_packages, dependencies = TRUE)
+}
+
+lapply(packages, require, character.only = TRUE, quiet = TRUE)
+
+source("./scrape.R")
+
+salaries <- scrape()
+```
+
+```{r}
+professors <- salaries %>%
+    # We only need the title, department, and salary variables.
+    select(title, Department = department, Salary = salary) %>%
+
+    # We want only Assistant and Assoicate Professors; they have the largest
+    # differences between departments. Full Professors have less variation
+    # between departments.
+    filter(title == "Assistant Professor" | title == "Associate Professor") %>%
+    # filter(title == "Assistant Professor" | title == "Associate Professor" | title == "Professor") %>%
+
+    # Clean up the department names.
+    # TODO: Consider combining some of these.
+    mutate(Department = case_match(Department,
+        c("Nursing Programs") ~ "Nursing",
+        c("Agricultural Science") ~ "Agricultural Science",
+        c("Arts/Humanities") ~ "Arts and Humanities",
+        c("Social Sciences") ~ "Social Sciences",
+        c("Allied Health") ~ "Allied Health",
+        c("Math/Science") ~ "Math and Science",
+        c("Business and Information Tech") ~ "Business and IT",
+        c("Industrial Technologies") ~ "Industrial Technologies",
+        c("Communication/English/Media") ~ "CEM",
+        c("International Programs") ~ "Global Learning",
+        c("Hospitality Arts") ~ "Hospitality Arts",
+        .default = NA
+    )) %>%
+
+    # Remove any other departments; this excludes some regional centers and a
+    # few professors from the Dean of Students office.
+    drop_na() %>%
+
+    # Remove any salary below 50,000 because it is likely they were on some kind
+    # of partial leave arrangement.
+    filter(Salary > 50000) %>%
+
+    # Sort the departments by the median salary in ascending order.
+    mutate(Department = fct_reorder(Department, Salary, median))
+```
+
+```{r}
+professors %>%
+   # Build the chart.
+    ggplot(aes(Department, Salary, fill = Department)) +
+
+    # Add a layer of boxplots.
+    geom_boxplot(alpha = 0.5, outlier.shape = NA) +
+
+    # Add a layer of dotplot to complement the boxplot visualization.
+    geom_dotplot(binaxis = "y", stackdir = "center", dotsize = 0.5, alpha = 0.5, binwidth=3000) +
+
+    # Facet the chart for the two different types of professors.
+    facet_wrap(~ title) +
+
+    # Adjust the theme to make it pretty.
+    theme_minimal() +
+    theme(
+        axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),
+        panel.spacing.x = unit(5, "line")) +
+
+    # Adjust color palette
+    # TODO: If I can get the number of departments to 8 or under, I can use "Accent"
+    scale_fill_brewer(palette = "Set3") +
+
+    # Add labels
+    labs(
+        title = "ELA faculty salaries lag behind other departments",
+        subtitle =  "FY2023 salary distributions by department",
+        caption = paste(
+            sep = "\n",
+            "Will Denny, 2023",
+            "Source: https://www.thegazette.com/",
+            "",
+            "† Salaries less than 50K were removed as being likely due to partial leaves of absence."
+    )) +
+
+    scale_y_continuous(label = scales::unit_format(unit = "K", scale = 1e-3)) +
+  
+    guides(fill = "none") +
+    xlab(NULL)
+```

@@ -1,0 +1,47 @@
+---
+title: "Adjunct Numbers"
+author: 
+  - name: "Will Denny"
+    email: "will@wjdenny.com"
+license: "CC BY"
+execute:
+  echo: false
+---
+```{r}
+#| label: dependencies
+#| output: false
+
+packages <- c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr")
+required_packages <- packages[!packages %in% installed.packages()[, "Package"]]
+
+if (length(required_packages)) {
+  install.packages(required_packages, dependencies = TRUE)
+}
+
+lapply(packages, require, character.only = TRUE)
+
+source("./scrape.R")
+
+salaries <- scrape()
+```
+
+We can attempt to compare the number of adjuncts per department with the number of full-time faculty. In the Gazette data, adjuncts are designated with the "Adjunct" label in the title column. Full-time instructional staff will have the label of "Professor" or "Instructor" somewhere in their title. These results are listed in @tbl-adjuncts showing that several academic departments, including Nursing, Allied Health, International Programs (Global Learning) and Arts/Humanities employ more than half of their instructional staff as contingent faculty. This data cannot be entirely accurate, however, as many adjuncts' departments are categorized under their regional campus instead of their academic department. Similarly, the [Distance Learning department](https://www.kirkwood.edu/about-us/faculty-leadership/academic-departments/academic-innovation-strategy-design/index) and College Credit in High School represent a wide range of academic departments and it seems adjunct faculty are designated as being in these departments whereas full time faculty would be designated as being in their respective academic departments even when teaching classes for Distance Learning or College Credit in High School departments. Contingent faculty are routinely misrepresented in this data. Given these caveats, the actual number of adjuncts per academic department is likely higher than presented here.
+
+```{r}
+#| label: tbl-adjuncts
+#| tbl-cap: "Ratio of full and part time instructional staff"
+percent <- scales::label_percent(accuracy = 1, scale = 100)
+
+salaries %>%
+  filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
+  mutate(adjunct = str_detect(title, "Adjunct")) %>%
+  count(department, adjunct) %>%
+  group_by(department) %>%
+  mutate(p = n / sum(n), `%` = percent(p)) %>%
+  filter(adjunct == TRUE) %>%
+  arrange(-p) %>%
+  select(Department = department, `Adjuncts as percentage of faculty` = `%`, `Number of adjuncts` = n) %>%
+  knitr::kable()
+  
+
+```

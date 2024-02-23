@@ -35,14 +35,31 @@ We can attempt to compare the number of adjuncts per department with the number 
 percent <- scales::label_percent(accuracy = 1, scale = 100)
 
 salaries %>%
+  # Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"
   filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
+  
+  # Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.
   mutate(adjunct = str_detect(title, "Adjunct")) %>%
+  
+  # Count the totals of adjunts and non-adjuncts per department.
   count(department, adjunct) %>%
+  
+  # Group the totals by department.
   group_by(department) %>%
+  
+  # Get ratios of adjunct and non-adjuncts per department.
   mutate(p = n / sum(n), `%` = percent(p)) %>%
+  
+  # Show only the adjuncts.
   filter(adjunct == TRUE) %>%
+  
+  # Arrange in descending ratio.
   arrange(-p) %>%
-  select(Department = department, `Adjuncts as percentage of faculty` = `%`, `Number of adjuncts` = n) %>%
+  
+  # Rename the columns.
+  select(Department = department, `Number of adjuncts` = n, `Adjuncts as percentage of faculty` = `%`) %>%
+  
+  # Display the table.
   knitr::kable()
   
 

@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -143,8 +177,57 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>packages <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"rvest"</span>, <span class="st">"magrittr"</span>, <span class="st">"dplyr"</span>, <span class="st">"tidyr"</span>, <span class="st">"forcats"</span>, <span class="st">"ggplot2"</span>, <span class="st">"stringr"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>required_packages <span class="ot">&lt;-</span> packages[<span class="sc">!</span>packages <span class="sc">%in%</span> <span class="fu">installed.packages</span>()[, <span class="st">"Package"</span>]]</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">length</span>(required_packages)) {</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(required_packages, <span class="at">dependencies =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(packages, require, <span class="at">character.only =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"./scrape.R"</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>salaries <span class="ot">&lt;-</span> <span class="fu">scrape</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
 <p>We can attempt to compare the number of adjuncts per department with the number of full-time faculty. In the Gazette data, adjuncts are designated with the “Adjunct” label in the title column. Full-time instructional staff will have the label of “Professor” or “Instructor” somewhere in their title. These results are listed in <a href="#tbl-adjuncts" class="quarto-xref">Table&nbsp;1</a> showing that several academic departments, including Nursing, Allied Health, International Programs (Global Learning) and Arts/Humanities employ more than half of their instructional staff as contingent faculty. This data cannot be entirely accurate, however, as many adjuncts’ departments are categorized under their regional campus instead of their academic department. Similarly, the <a href="https://www.kirkwood.edu/about-us/faculty-leadership/academic-departments/academic-innovation-strategy-design/index">Distance Learning department</a> and College Credit in High School represent a wide range of academic departments and it seems adjunct faculty are designated as being in these departments whereas full time faculty would be designated as being in their respective academic departments even when teaching classes for Distance Learning or College Credit in High School departments. Contingent faculty are routinely misrepresented in this data. Given these caveats, the actual number of adjuncts per academic department is likely higher than presented here.</p>
 <div class="cell">
+<details class="code-fold">
+<summary>Show the code</summary>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>percent <span class="ot">&lt;-</span> scales<span class="sc">::</span><span class="fu">label_percent</span>(<span class="at">accuracy =</span> <span class="dv">1</span>, <span class="at">scale =</span> <span class="dv">100</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>salaries <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(title, <span class="st">"Adjunct|Instructor|Professor"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">adjunct =</span> <span class="fu">str_detect</span>(title, <span class="st">"Adjunct"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Count the totals of adjunts and non-adjuncts per department.</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(department, adjunct) <span class="sc">%&gt;%</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Group the totals by department.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(department) <span class="sc">%&gt;%</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Get ratios of adjunct and non-adjuncts per department.</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">p =</span> n <span class="sc">/</span> <span class="fu">sum</span>(n), <span class="st">`</span><span class="at">%</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">percent</span>(p)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Show only the adjuncts.</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(adjunct <span class="sc">==</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Arrange in descending ratio.</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="sc">-</span>p) <span class="sc">%&gt;%</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Rename the columns.</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">Department =</span> department, <span class="st">`</span><span class="at">Number of adjuncts</span><span class="st">`</span> <span class="ot">=</span> n, <span class="st">`</span><span class="at">Adjuncts as percentage of faculty</span><span class="st">`</span> <span class="ot">=</span> <span class="st">`</span><span class="at">%</span><span class="st">`</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Display the table.</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
 <div id="tbl-adjuncts" class="cell quarto-float anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-adjuncts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -155,101 +238,101 @@ Table&nbsp;1: Ratio of full and part time instructional staff
 <table class="do-not-create-environment cell table table-sm table-striped small">
 <colgroup>
 <col style="width: 36%">
-<col style="width: 40%">
 <col style="width: 22%">
+<col style="width: 40%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Department</th>
-<th style="text-align: left;">Adjuncts as percentage of faculty</th>
 <th style="text-align: right;">Number of adjuncts</th>
+<th style="text-align: left;">Adjuncts as percentage of faculty</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Distance Learning</td>
-<td style="text-align: left;">100%</td>
 <td style="text-align: right;">58</td>
+<td style="text-align: left;">100%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Iowa City Campus</td>
-<td style="text-align: left;">100%</td>
 <td style="text-align: right;">20</td>
+<td style="text-align: left;">100%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Williamsburg Center</td>
-<td style="text-align: left;">100%</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: left;">100%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">College Credit in High School</td>
-<td style="text-align: left;">100%</td>
 <td style="text-align: right;">1</td>
+<td style="text-align: left;">100%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Nursing Programs</td>
-<td style="text-align: left;">84%</td>
 <td style="text-align: right;">88</td>
+<td style="text-align: left;">84%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Jones County Regional Center</td>
-<td style="text-align: left;">75%</td>
 <td style="text-align: right;">3</td>
+<td style="text-align: left;">75%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Allied Health</td>
-<td style="text-align: left;">66%</td>
 <td style="text-align: right;">41</td>
+<td style="text-align: left;">66%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">International Programs</td>
-<td style="text-align: left;">61%</td>
 <td style="text-align: right;">11</td>
+<td style="text-align: left;">61%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Arts/Humanities</td>
-<td style="text-align: left;">55%</td>
 <td style="text-align: right;">28</td>
+<td style="text-align: left;">55%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Linn County Regional Center</td>
-<td style="text-align: left;">50%</td>
 <td style="text-align: right;">3</td>
+<td style="text-align: left;">50%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Business and Information Tech</td>
-<td style="text-align: left;">44%</td>
 <td style="text-align: right;">18</td>
+<td style="text-align: left;">44%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Communication/English/Media</td>
-<td style="text-align: left;">41%</td>
 <td style="text-align: right;">19</td>
+<td style="text-align: left;">41%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Social Sciences</td>
-<td style="text-align: left;">39%</td>
 <td style="text-align: right;">17</td>
+<td style="text-align: left;">39%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Industrial Technologies</td>
-<td style="text-align: left;">25%</td>
 <td style="text-align: right;">8</td>
+<td style="text-align: left;">25%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Hospitality Arts</td>
-<td style="text-align: left;">25%</td>
 <td style="text-align: right;">2</td>
+<td style="text-align: left;">25%</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Math/Science</td>
-<td style="text-align: left;">19%</td>
 <td style="text-align: right;">10</td>
+<td style="text-align: left;">19%</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Agricultural Science</td>
-<td style="text-align: left;">17%</td>
 <td style="text-align: right;">4</td>
+<td style="text-align: left;">17%</td>
 </tr>
 </tbody>
 </table>

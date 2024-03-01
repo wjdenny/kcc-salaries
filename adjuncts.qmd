@@ -35,82 +35,89 @@ However, data for adjuncts who teach in regional centers or in distance educatio
 #| tbl-cap: "Counts and ratio of full and part time instructional staff"
 percent <- scales::label_percent(accuracy = 1, scale = 100)
 
-salaries %>%
+tbl_adjuncts <- salaries %>%
   # Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"
   filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
   
   # Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.
-  mutate(adjunct = str_detect(title, "Adjunct")) %>%
+  mutate(status = str_detect(title, "Adjunct")) %>%
   
-  # Count the totals of adjunts and non-adjuncts per department.
-  count(department, adjunct) %>%
+  # Count the totals of adjuncts and non-adjuncts per department.
+  count(department, status) %>%
   
   # Group the totals by department.
   group_by(department) %>%
   
   # Get ratios of adjunct and non-adjuncts per department.
-  mutate(p = n / sum(n), `%` = percent(p)) %>%
-  
+  mutate(p = n / sum(n), `%` = percent(p))
+
+# Display the table.
+tbl_adjuncts %>%
   # Show only the adjuncts.
-  filter(adjunct == TRUE) %>%
+  filter(status == TRUE) %>%
   
   # Arrange in descending ratio.
   arrange(-p) %>%
   
-  # Rename the columns.
-  select(department, n, `%`) %>%
-  
-  # Display the table.
-  knitr::kable()
+  mutate(adjuncts = paste0(n, " (", percent(p), ")")) %>%
+
+  select(department, `% adjuncts` = `%`) %>%
+  knitr::kable(align = c("l", "r"))
 
 ```
 
-The first four "departments" are some of the programs and regional centers mentioend above. To illustrate this point further, of the 20 adjunct instructors teaching in the Iowa City campus, some are teaching courses in International Programs, some are teaching courses in Communication/English/Media, and some are teaching in Math/Science. Full-time faculty teaching those courses on any campus and adjunct instructors teaching on the main campus *are* designated as being in their respective departments, but adjuncts are designated as being in the Iowa City campus "department." This makes it difficult to get an accurate count, but we can still get an estimate that errs on the lower end. 
+The first four "departments" are some of the programs and regional centers mentioend above. To illustrate this point further, of the 20 adjunct instructors teaching in the Iowa City campus, some are teaching courses in International Programs, some are teaching courses in Communication/English/Media, and some are teaching in Math/Science. Full-time faculty teaching those courses on any campus and adjunct instructors teaching on the main campus are designated as being in their respective departments, but adjuncts are designated as being in the Iowa City campus "department." This makes it difficult to get an accurate count, but we can still get an estimate that errs on the lower end. 
 
 ```{r}
 #| label: fig-adjuncts
-#| fig-cap: "Low estimate of instructors by department"
+#| fig-cap: "Low estimate of adjunct instructors (relative to full-time) by department"
 
 
-tbl_count <- salaries %>%
-  # Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"
-  filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
-
-  # Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.
-  mutate(adjunct = str_detect(title, "Adjunct")) %>%
-  
-  # Count the totals of adjunts and non-adjuncts per department.
-  count(department, adjunct) %>%
-  
+tbl_plot <- tbl_adjuncts %>%
+    
   filter(!department %in% c(
+    "Continuing Ed/Training Svcs",
+    "Secondary Programs",
+    "Distance Learning",
     "Iowa City Campus",
-    "Distance Learning"
+    "Dean of Students Office",
+    "Linn County Regional Center",
+    "Jones County Regional Center",
+    "Regional Center at U of I",
+    "Williamsburg Center",
+    "Washington Center",
+    "Continuing Education and Training",
+    "College Credit in High School"
   )) %>%
   
-  filter(adjunct) %>%
+  mutate(status = case_when(status ~ "Part-time faculty", !status ~ "Full-time faculty")) %>% 
   
-  arrange(-n) %>%
+  # Merge some department strings
+  mutate(department = if_else(department == "Physiology, Math/Science", "Math/Science", department)) %>%
   
-  head(10)
+  
+  group_by(department) %>%
+  mutate(total = sum(n)) %>%
+  ungroup() %>%
+  mutate(department = fct_reorder(department, total, .desc = FALSE))
 
-# Display the figure
-salaries %>%
-  # Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"
-  filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
-  
-  # Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.
-  mutate(adjunct = str_detect(title, "Adjunct")) %>%
-  
-  # Get only top 5 departments in terms of adjunct count.
-  filter(department %in% tbl_count$department) %>%
-  
-  mutate(department = fct_reorder(department, department, .fun = function(x) length(x))) %>%
+gg_adjuncts <- tbl_plot %>%
+  ggplot(aes(department, n, fill = status)) +
+  geom_col() +
+  xlab(NULL) +
+  ylab(NULL) +
+  coord_flip() +
+  theme_void() +
+  theme(axis.text.y = element_text(hjust = 1)) +
+  scale_fill_manual(values = c("azure", "cyan"))
 
-  ggplot(aes(department, fill = adjunct)) +
-    geom_bar() +
-    theme_void() +
-    theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1)) +
-    guides(fill = "none") +
-    scale_fill_manual(values = c("azure", "deepskyblue"))
+
+gg_adjuncts +
+  geom_text(
+    data = filter(tbl_plot, status == "Part-time faculty"),
+    mapping = aes(department, total, label = `%`),
+    hjust = 1.1,
+    size = 8/.pt
+  )
 ```
 

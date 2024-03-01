@@ -1,14 +1,10 @@
-packages <- c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr")
-required_packages <- packages[!packages %in% installed.packages()[, "Package"]]
+devtools::source_gist("d51986afea07c9a6f7c7c93f91e5bbbc", sha1 = "59191a4eaca2b0d7e3d695e3660cbff8c55b6fdf")
+import(c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr", "readr"))
 
-if (length(required_packages)) {
-  install.packages(required_packages, dependencies = TRUE)
-}
+url = "https://www.thegazette.com/salaries/data-kirkwood-community-college-public-employee-salaries-for-fiscal-year-2023/"
+dataFile = "./FY2023.csv"
 
-lapply(packages, require, character.only = TRUE)
-
-scrape <- function(url = "https://www.thegazette.com/salaries/data-kirkwood-community-college-public-employee-salaries-for-fiscal-year-2023/")
-{
+if (!file.exists(dataFile)) {
   html <- rvest::read_html(url)
   
   html %>%
@@ -16,8 +12,8 @@ scrape <- function(url = "https://www.thegazette.com/salaries/data-kirkwood-comm
     rvest::html_table() %>%
     `[[`(1) %>%
     rename(
-      #"name_first" = 1,
-      #"name_last" = 2,
+      "name_first" = 1,
+      "name_last" = 2,
       "title" = 3,
       "salary" = 4) %>%
     
@@ -45,5 +41,10 @@ scrape <- function(url = "https://www.thegazette.com/salaries/data-kirkwood-comm
     mutate(department = fct_infreq(department)) %>%
     
     # Convert salary into a number
-    mutate(salary = as.numeric(gsub("\\$|,", "", salary)))
+    mutate(salary = as.numeric(gsub("\\$|,", "", salary))) %>%
+    
+    select(-name_first, -name_last) %>%
+    
+    # Write the data to file
+    write_csv(dataFile)
 }

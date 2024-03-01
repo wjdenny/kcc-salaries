@@ -8,30 +8,31 @@ format:
   html:
     code-fold: true
     code-summary: "Show the code"
+bibliography: sources.bib
 ---
 ```{r}
 #| label: dependencies
 #| output: false
 
-packages <- c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr")
-required_packages <- packages[!packages %in% installed.packages()[, "Package"]]
-
-if (length(required_packages)) {
-  install.packages(required_packages, dependencies = TRUE)
-}
-
-lapply(packages, require, character.only = TRUE)
+devtools::source_gist("d51986afea07c9a6f7c7c93f91e5bbbc", sha1 = "59191a4eaca2b0d7e3d695e3660cbff8c55b6fdf")
+import(c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr"))
 
 source("./scrape.R")
 
-salaries <- scrape()
+salaries <- read_csv("FY2023.csv", show_col_types = FALSE)
 ```
 
-We can attempt to compare the number of adjuncts per department with the number of full-time faculty. In the Gazette data, adjuncts are designated with the "Adjunct" label in the title column. Full-time instructional staff will have the label of "Professor" or "Instructor" somewhere in their title. These results are listed in @tbl-adjuncts showing that several academic departments, including Nursing, Allied Health, International Programs (Global Learning) and Arts/Humanities employ more than half of their instructional staff as contingent faculty. This data cannot be entirely accurate, however, as many adjuncts' departments are categorized under their regional campus instead of their academic department. Similarly, the [Distance Learning department](https://www.kirkwood.edu/about-us/faculty-leadership/academic-departments/academic-innovation-strategy-design/index) and College Credit in High School represent a wide range of academic departments and it seems adjunct faculty are designated as being in these departments whereas full time faculty would be designated as being in their respective academic departments even when teaching classes for Distance Learning or College Credit in High School departments. Contingent faculty are routinely misrepresented in this data. Given these caveats, the actual number of adjuncts per academic department is likely higher than presented here.
+Adjuncts are contigent faculty whose roles and responsibilities can vary from institution to institution. In generally, they serve as primary instructors of courses while being paid significantly less than full-time faculty, both in total and per course hour. Adjunct faculty at Kirkwood are given limited access to departmental resources (including personnel through meetings, professional development opportunities, and office space). Part-time faculty have been found to be less effective for the educational outcomes of undergraduate students [@2007umbach], and with this lack of institutional support, it is not difficult to see why.
+
+Here, we will explore the employee salary data published by the Gazette [-@2023mcglothlen] to compare the number of part- and full-time instructional staff in each department at Kirkwood Community College and discuss some issues in the data. 
+
+In the Gazette data, adjuncts are designated with the "Adjunct" label in the title field. Full-time instructional staff will have the label of "Professor" or "Instructor" somewhere in their title (including Assistant and Associate Professors). These results are listed in @tbl-adjuncts showing that several academic departments, including Nursing, Allied Health, International Programs (Global Learning) and Arts/Humanities employ more than half of their instructional staff as contingent faculty. Each employee also has a department field in the data which, in most cases, tells us which department they work in.
+
+However, data for adjuncts who teach in regional centers or in distance education programs are not published with their academic department but rather with the regional campus or program. The [Distance Learning department](https://www.kirkwood.edu/about-us/faculty-leadership/academic-departments/academic-innovation-strategy-design/index), College Credit in High School, and regional campuses represent a wide range of academic departments. As the courses being taught are generally the same as those taught by full-time faculty or by any faculty on the main campus, this would result in underestimating the number of adjuncts in a given academic department. Given these caveats, the actual number of adjuncts per academic department is likely higher than presented here.
 
 ```{r}
 #| label: tbl-adjuncts
-#| tbl-cap: "Ratio of full and part time instructional staff"
+#| tbl-cap: "Counts and ratio of full and part time instructional staff"
 percent <- scales::label_percent(accuracy = 1, scale = 100)
 
 salaries %>%
@@ -57,10 +58,59 @@ salaries %>%
   arrange(-p) %>%
   
   # Rename the columns.
-  select(Department = department, `Number of adjuncts` = n, `Adjuncts as percentage of faculty` = `%`) %>%
+  select(department, n, `%`) %>%
   
   # Display the table.
   knitr::kable()
-  
 
 ```
+
+The first four "departments" are some of the programs and regional centers mentioend above. To illustrate this point further, of the 20 adjunct instructors teaching in the Iowa City campus, some are teaching courses in International Programs, some are teaching courses in Communication/English/Media, and some are teaching in Math/Science. Full-time faculty teaching those courses on any campus and adjunct instructors teaching on the main campus *are* designated as being in their respective departments, but adjuncts are designated as being in the Iowa City campus "department." This makes it difficult to get an accurate count, but we can still get an estimate that errs on the lower end. 
+
+```{r}
+#| label: fig-adjuncts
+#| fig-cap: "Low estimate of instructors by department"
+
+
+tbl_count <- salaries %>%
+  # Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"
+  filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
+
+  # Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.
+  mutate(adjunct = str_detect(title, "Adjunct")) %>%
+  
+  # Count the totals of adjunts and non-adjuncts per department.
+  count(department, adjunct) %>%
+  
+  filter(!department %in% c(
+    "Iowa City Campus",
+    "Distance Learning"
+  )) %>%
+  
+  filter(adjunct) %>%
+  
+  arrange(-n) %>%
+  
+  head(10)
+
+# Display the figure
+salaries %>%
+  # Filter to obtain only instructional staff; designated with the strings "adjunct," "instructor," or "professor"
+  filter(str_detect(title, "Adjunct|Instructor|Professor")) %>%
+  
+  # Set a boolean adjunct flag; true if the title contains the string "adjunct," otherwise false.
+  mutate(adjunct = str_detect(title, "Adjunct")) %>%
+  
+  # Get only top 5 departments in terms of adjunct count.
+  filter(department %in% tbl_count$department) %>%
+  
+  mutate(department = fct_reorder(department, department, .fun = function(x) length(x))) %>%
+
+  ggplot(aes(department, fill = adjunct)) +
+    geom_bar() +
+    theme_void() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 1, hjust = 1)) +
+    guides(fill = "none") +
+    scale_fill_manual(values = c("azure", "deepskyblue"))
+```
+

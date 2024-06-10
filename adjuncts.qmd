@@ -13,13 +13,12 @@ bibliography: sources.bib
 ```{r}
 #| label: dependencies
 #| output: false
+#| echo: false
 
 devtools::source_gist("d51986afea07c9a6f7c7c93f91e5bbbc", sha1 = "59191a4eaca2b0d7e3d695e3660cbff8c55b6fdf")
 import(c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr"))
 
 source("./scrape.R")
-
-salaries <- read_csv("FY2023.csv", show_col_types = FALSE)
 ```
 
 Adjuncts are contigent faculty whose roles and responsibilities can vary from institution to institution. In generally, they serve as primary instructors of courses while being paid significantly less than full-time faculty, both in total and per course hour. Adjunct faculty at Kirkwood are given limited access to departmental resources (including personnel through meetings, professional development opportunities, and office space). Part-time faculty have been found to be less effective for the educational outcomes of undergraduate students [@2007umbach], and with this lack of institutional support, it is not difficult to see why.
@@ -33,6 +32,8 @@ However, data for adjuncts who teach in regional centers or in distance educatio
 ```{r}
 #| label: tbl-adjuncts
 #| tbl-cap: "Counts and ratio of full and part time instructional staff"
+
+salaries <- read_csv("FY2023.csv", show_col_types = FALSE)
 percent <- scales::label_percent(accuracy = 1, scale = 100)
 
 tbl_adjuncts <- salaries %>%

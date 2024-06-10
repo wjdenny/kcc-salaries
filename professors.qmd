@@ -13,22 +13,17 @@ format:
 ```{r}
 #| label: dependencies
 #| output: false
+#| echo: false
 
-packages <- c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr")
-required_packages <- packages[!packages %in% installed.packages()[, "Package"]]
-
-if (length(required_packages)) {
-  install.packages(required_packages, dependencies = TRUE)
-}
-
-lapply(packages, require, character.only = TRUE, quiet = TRUE)
+devtools::source_gist("d51986afea07c9a6f7c7c93f91e5bbbc", sha1 = "59191a4eaca2b0d7e3d695e3660cbff8c55b6fdf")
+import(c("rvest", "magrittr", "dplyr", "tidyr", "forcats", "ggplot2", "stringr"))
 
 source("./scrape.R")
-
-salaries <- scrape()
 ```
 
 ```{r}
+salaries <- read_csv("FY2023.csv", show_col_types = FALSE)
+
 professors <- salaries %>%
     # We only need the title, department, and salary variables.
     select(title, Department = department, Salary = salary) %>%
